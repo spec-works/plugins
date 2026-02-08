@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "xregistry-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@spec-works/xregistry-mcp-server"
+      ],
+      "tools": [
+        "*"
+      ]
+    }
+  }
+}
