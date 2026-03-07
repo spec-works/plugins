@@ -4,10 +4,11 @@ description: >
   Convert between Markdown and Microsoft Word (.docx) documents using the MarkMyWord CLI tool.
   Use this skill when the user wants to create a Word document from Markdown, convert a .docx file
   to Markdown, generate documentation in Word format, or roundtrip between Markdown and Word.
-  Activate when the user mentions Word documents, .docx files, document conversion, or
-  Markdown-to-Word workflows. Also useful for LLM grounding from Word documents.
+  Supports Mermaid diagram rendering to embedded images, syntax highlighting, and light/dark themes.
+  Activate when the user mentions Word documents, .docx files, document conversion,
+  Markdown-to-Word workflows, or Mermaid diagrams in Word. Also useful for LLM grounding from Word documents.
 license: MIT
-compatibility: Requires .NET 9.0 or later SDK. Works on Windows, macOS, and Linux.
+compatibility: Requires .NET 10.0 or later SDK. Works on Windows, macOS, and Linux.
 metadata:
   author: spec-works
   version: "1.0"
@@ -20,15 +21,15 @@ Bidirectional conversion between CommonMark/GitHub Flavored Markdown and Microso
 
 ## Prerequisites — Installing .NET
 
-The MarkMyWord CLI requires .NET 9.0 or later. Install the SDK for your platform:
+The MarkMyWord CLI requires .NET 10.0 or later. Install the SDK for your platform:
 
 ### Windows
 
 ```powershell
 # Using winget (recommended)
-winget install Microsoft.DotNet.SDK.9
+winget install Microsoft.DotNet.SDK.10
 
-# Or download from https://dotnet.microsoft.com/download/dotnet/9.0
+# Or download from https://dotnet.microsoft.com/download/dotnet/10.0
 ```
 
 ### macOS
@@ -37,7 +38,7 @@ winget install Microsoft.DotNet.SDK.9
 # Using Homebrew (recommended)
 brew install dotnet-sdk
 
-# Or download from https://dotnet.microsoft.com/download/dotnet/9.0
+# Or download from https://dotnet.microsoft.com/download/dotnet/10.0
 ```
 
 ### Linux (Ubuntu/Debian)
@@ -50,20 +51,20 @@ rm packages-microsoft-prod.deb
 
 # Install .NET SDK
 sudo apt-get update
-sudo apt-get install -y dotnet-sdk-9.0
+sudo apt-get install -y dotnet-sdk-10.0
 ```
 
 ### Linux (Fedora/RHEL)
 
 ```bash
-sudo dnf install dotnet-sdk-9.0
+sudo dnf install dotnet-sdk-10.0
 ```
 
 ### Verify Installation
 
 ```bash
 dotnet --version
-# Should show 9.x.x or later
+# Should show 10.x.x or later
 ```
 
 ## Installing the CLI Tool
@@ -141,6 +142,7 @@ markmyword convert -i document.docx --extract-images false
 | `--font` | `-f` | Default font name (e.g., 'Calibri') |
 | `--font-size` | `-s` | Default font size (6–72 points) |
 | `--style` | — | Path to JSON style configuration file |
+| `--theme` | — | Color theme: `light` or `dark` |
 
 #### Word → Markdown Options
 
@@ -247,6 +249,7 @@ Use with: `markmyword convert -i input.md --style custom-style.json`
 | Inline code | `` `code` `` | Monospace font run |
 | Links | `[text](url)` | Word hyperlink |
 | Images | `![alt](url)` | Embedded image (local files and URLs) |
+| Mermaid diagrams | ` ```mermaid ` | Rendered as embedded PNG images |
 | Hard line breaks | Two spaces or `\` at EOL | Line break |
 
 ### Word → Markdown
@@ -270,6 +273,7 @@ Supported languages for color-highlighted code blocks:
 - **JSON** — property names, strings, numbers, booleans
 - **TypeSpec** — keywords, types, decorators, comments
 - **Bash/Shell** — commands, keywords, variables, strings
+- **Mermaid** — rendered as embedded PNG diagram images (flowchart, sequence, class, state, ER, Gantt, pie)
 
 ## Limitations — What MarkMyWord Cannot Do
 
@@ -277,14 +281,13 @@ Supported languages for color-highlighted code blocks:
 
 1. **No custom Word templates** — output uses default styles; you cannot apply a `.dotx` template
 2. **No math/LaTeX rendering** — formulas render as plain text
-3. **No Mermaid diagram rendering** — diagram code blocks render as plain code text
-4. **No task lists** — `- [ ]` checkboxes are not rendered as checkboxes
-5. **No footnotes** — footnote syntax is not converted
-6. **No definition lists** — definition list syntax is not supported
-7. **No strikethrough** — `~~text~~` is not rendered with strikethrough
-8. **Limited syntax highlighting** — only JSON, TypeSpec, and Bash; other languages render as plain monospace
-9. **No table alignment** — GFM column alignment (`:---`, `:---:`, `---:`) is not preserved
-10. **No embedded video/audio** — media links render as text hyperlinks
+3. **No task lists** — `- [ ]` checkboxes are not rendered as checkboxes
+4. **No footnotes** — footnote syntax is not converted
+5. **No definition lists** — definition list syntax is not supported
+6. **No strikethrough** — `~~text~~` is not rendered with strikethrough
+7. **Limited syntax highlighting** — only JSON, TypeSpec, and Bash; other languages render as plain monospace
+8. **No table alignment** — GFM column alignment (`:---`, `:---:`, `---:`) is not preserved
+9. **No embedded video/audio** — media links render as text hyperlinks
 
 ### Word → Markdown Limitations
 
