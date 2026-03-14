@@ -35,6 +35,15 @@
       "skills": [
         "./skills/xregistry-mcp"
       ]
+    },
+    {
+      "name": "officetalk",
+      "source": "plugins/officetalk",
+      "description": "Apply deterministic operations to Office documents (.docx, .xlsx, .pptx) via OfficeTalk CLI.",
+      "version": "0.1.0",
+      "skills": [
+        "./skills/officetalk-cli"
+      ]
     }
   ]
 }
