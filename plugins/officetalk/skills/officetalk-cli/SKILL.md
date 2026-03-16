@@ -11,7 +11,7 @@ license: MIT
 compatibility: Requires .NET 9.0 or later SDK. Works on Windows, macOS, and Linux.
 metadata:
   author: spec-works
-  version: "0.1"
+  version: "0.2"
   repository: https://github.com/spec-works/OfficeTalkEngine
 ---
 
@@ -136,21 +136,24 @@ Addresses are `/`-separated paths that locate content within an Office document.
 
 | Segment | Description |
 |---------|-------------|
-| `sheet` | A worksheet |
-| `range` | A cell range |
-| `column` | A column |
-| `row` | A table row |
-| `cell` | A single cell |
+| `sheet` | A worksheet — `sheet["Revenue"]` or `sheet[1]` |
+| `row` | A row within a sheet — `sheet[1]/row[3]` |
+| *cell ref* | Direct cell reference — `sheet["Revenue"]/B7`, `sheet[1]/A1` |
+
+Cell references (e.g., `A1`, `B7`, `D2`) are used directly as address segments. If the cell doesn't exist, it is created automatically.
 
 #### PowerPoint
 
 | Segment | Description |
 |---------|-------------|
-| `slide` | A slide |
-| `shape` | A shape on a slide |
-| `title` | Title placeholder |
-| `subtitle` | Subtitle placeholder |
+| `slide` | A slide — `slide[1]` or `slide[text*="Revenue"]` |
+| `title` | Title placeholder shape |
+| `subtitle` | Subtitle placeholder shape |
+| `body` | Body/content placeholder shape |
 | `notes` | Speaker notes |
+| `shape` | A named shape — `shape[name="Logo"]` |
+| `table` | A table on the slide |
+| `image` | An image on the slide |
 
 ### Predicates
 
@@ -207,11 +210,14 @@ header[type=default]
 
 # Excel
 sheet["Revenue"]/B7
-sheet["Revenue"]/A1:D10
+sheet["Q1 Budget"]/D2
 sheet[1]/row[5]
+sheet["Headcount"]/A7
 
 # PowerPoint
 slide[1]/title
+slide[1]/subtitle
+slide[3]/body
 slide[3]/shape[name="Chart1"]
 slide[2]/notes
 ```
@@ -349,6 +355,34 @@ AT sheet["Old Name"]
 RENAME SHEET "New Name"
 ```
 
+### Annotation Operations
+
+#### COMMENT — Add a review comment
+
+```
+AT body/paragraph[text*="revenue"]
+COMMENT "Please verify this figure against the Q1 actuals."
+
+AT sheet["Q1 Budget"]/D2
+COMMENT "Engineering is $12K over budget. Verify contractor spend."
+
+AT slide[3]
+COMMENT "These risks need mitigation plans before the board meeting."
+
+# Multi-line comment using content block
+AT body/heading[text="Conclusion"]
+COMMENT <<<
+This section needs work:
+- Add supporting data
+- Reference the appendix
+>>>
+```
+
+Comments are supported across all three document types:
+- **Word**: Creates range-based comments visible in the Review pane
+- **Excel**: Adds cell comments (visible on hover)
+- **PowerPoint**: Adds slide-level comments
+
 ### Metadata Operations
 
 ```
@@ -408,6 +442,32 @@ FORMAT color=#2B579A
 - Every block operates on the document as it existed before any modifications
 
 This makes OfficeTalk documents safe to produce — the author reasons about the current state of the document, not a partially-modified intermediate state.
+
+## Live Editing with COM (Windows)
+
+On Windows, if the target application (Word, Excel, or PowerPoint) is running with the target document open, the CLI **automatically uses COM automation** instead of OpenXML. This means:
+
+- **Changes appear instantly** in the open document — no need to close and reopen
+- **No file lock conflicts** — COM edits the live document through the application
+- **Automatic detection** — no flags needed; the CLI checks if the app has the file open
+- Falls back to OpenXML if the application isn't running or the file isn't open
+
+Supported COM operations by application:
+
+| Operation | Word | Excel | PowerPoint |
+|-----------|------|-------|------------|
+| SET | ✓ | ✓ | ✓ |
+| DELETE | ✓ | ✓ | ✓ |
+| COMMENT | ✓ | ✓ | ✓ |
+| FORMAT | ✓ | ✓ (bold, borders, fill, alignment, number-format) | ✓ (background, font) |
+| REPLACE | ✓ | — | — |
+| INSERT | ✓ | — | — |
+| STYLE | ✓ | — | — |
+
+When COM is active, verbose mode (`-v`) will report:
+```
+Excel is open with target workbook — using COM executor.
+```
 
 ## CLI Commands
 
@@ -642,17 +702,17 @@ FORMAT bold=true, fill-color=#2B579A, color=#FFFFFF
 OFFICETALK/1.0
 DOCTYPE excel
 
-AT sheet["Revenue"]/B7
-SET "1250.00"
-FORMAT number-format="#,##0.00", bold=true
+# Add totals row with formatting
+AT sheet["Q1 Budget"]/A7
+  SET "Total"
+  FORMAT bold=true, border-bottom=medium
 
-AT sheet["Revenue"]/A1:F1
-FORMAT font-name="Calibri", font-size=12pt, bold=true
-FORMAT fill-color=#4472C4, color=#FFFFFF
+AT sheet["Q1 Budget"]/B7
+  SET "490000"
+  FORMAT bold=true, border-bottom=medium
 
-AT sheet["Revenue"]/row[15]
-INSERT ROW AFTER
-SET CELLS "Product E", "North", "450", "12.5%", "Active", "2026-01-15"
+AT sheet["Q1 Budget"]/D2
+  COMMENT "Engineering is $12K over budget. Verify contractor spend."
 ```
 
 ### Update a PowerPoint Presentation
@@ -663,19 +723,20 @@ DOCTYPE powerpoint
 
 AT slide[1]/title
 SET "Q1 2026 Business Review"
-FORMAT font-size=40pt, bold=true, color=#1F3864
 
 AT slide[1]/subtitle
 SET "Prepared by the Strategy Team — March 2026"
 
+# Change slide background color
 AT slide[3]
-INSERT SLIDE AFTER
-SET title "Key Metrics"
-SET body <<<
-Revenue grew 12% year-over-year.
-Customer retention improved to 94%.
-Three new enterprise clients onboarded.
->>>
+FORMAT background=green
+
+# Add a reviewer comment
+AT slide[3]
+COMMENT "These risks need mitigation plans before the board meeting."
+
+AT slide[4]/body
+SET "1. Finalize Q2 budget allocations\n2. Launch customer retention program\n3. Hire 5 senior engineers"
 ```
 
 ## Limitations — What OfficeTalk Cannot Do
@@ -685,10 +746,10 @@ Three new enterprise clients onboarded.
 3. **No image insertion** — cannot embed new images (can modify existing image properties)
 4. **No chart creation** — charts must exist in the document already
 5. **No template application** — cannot apply .dotx/.potx templates
-6. **Excel/PowerPoint support is partial** — Word documents have the most complete implementation
-7. **FORMAT operation** — not all formatting properties are implemented yet
-8. **INSERT BEFORE/AFTER** — currently stubbed in the execution engine
-9. **Structural operations** — INSERT ROW/COLUMN, MERGE CELLS are not yet implemented
+6. **No shape creation** — cannot add textboxes or shapes to slides/documents (see [issue #2](https://github.com/spec-works/OfficeTalk/issues/2))
+7. **FORMAT operation** — not all formatting properties are implemented yet (COM executors have broader support)
+8. **Structural operations** — INSERT ROW/COLUMN, MERGE CELLS are not yet implemented for Excel/PowerPoint
+9. **COM is Windows-only** — live editing requires Windows with the Office application installed
 
 ## Composing with Other Tools
 
