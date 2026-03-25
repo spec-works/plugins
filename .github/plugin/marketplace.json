@@ -44,6 +44,15 @@
       "skills": [
         "./skills/officetalk-cli"
       ]
+    },
+    {
+      "name": "a2a-ask",
+      "source": "plugins/a2a-ask",
+      "description": "Interact with remote A2A (Agent-to-Agent) protocol agents via CLI.",
+      "version": "1.0.0",
+      "skills": [
+        "./skills/a2a-ask-cli"
+      ]
     }
   ]
 }
