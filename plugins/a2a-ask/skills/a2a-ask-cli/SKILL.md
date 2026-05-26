@@ -10,7 +10,7 @@ license: MIT
 compatibility: Requires .NET 10.0 or later SDK. Works on Windows, macOS, and Linux.
 metadata:
   author: spec-works
-  version: "1.3"
+  version: "1.4"
   repository: https://github.com/spec-works/A2A-Ask
 ---
 
@@ -32,13 +32,13 @@ winget install Microsoft.DotNet.SDK.10
 
 ### macOS
 
-```bash
+```powershell
 brew install dotnet-sdk
 ```
 
 ### Linux (Ubuntu/Debian)
 
-```bash
+```powershell
 wget https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
 sudo dpkg -i packages-microsoft-prod.deb && rm packages-microsoft-prod.deb
 sudo apt-get update && sudo apt-get install -y dotnet-sdk-10.0
@@ -46,20 +46,20 @@ sudo apt-get update && sudo apt-get install -y dotnet-sdk-10.0
 
 ### Verify Installation
 
-```bash
+```powershell
 dotnet --version
 # Should show 10.x.x or later
 ```
 
 ## Installing the CLI Tool
 
-```bash
+```powershell
 dotnet tool install --global SpecWorks.A2A-Ask
 ```
 
 Verify it works:
 
-```bash
+```powershell
 a2a-ask version
 ```
 
@@ -71,7 +71,7 @@ a2a-ask version
 
 If you already have a direct agent URL, discover the agent card first so you understand its capabilities, skills, and security requirements.
 
-```bash
+```powershell
 a2a-ask discover <agent-url> --output text
 ```
 
@@ -81,7 +81,7 @@ The `<agent-url>` is the base URL of the agent endpoint. The CLI will automatica
 
 **Example:**
 
-```bash
+```powershell
 a2a-ask discover https://example.com/agents/my-agent --output text
 ```
 
@@ -89,12 +89,12 @@ a2a-ask discover https://example.com/agents/my-agent --output text
 
 If you start from an AI catalog instead of a direct agent URL, browse the catalog first and then resolve the specific agent you want:
 
-```bash
-a2a-ask catalog list <catalog-url> --output text
-a2a-ask catalog show @<agent>@<catalog-url> --output text
+```powershell
+a2a-ask catalog list mycatalog --output text
+a2a-ask catalog show myagent@mycatalog --output text
 ```
 
-Use `@@catalog` as shorthand when you want to browse a catalog, and use `@agent@catalog` when you want one specific agent. Bare `@agent` targets are parsed, but Phase 1 still requires an explicit catalog host or URL.
+Use `agent@catalog` to resolve a specific agent from a registered catalog alias. A bare name like `mycatalog` first checks registered aliases, then searches all registered catalogs for an agent with that name. Use `+` to encode spaces in names, such as `my+agent@my+catalog`. 
 
 **What to look for in the response:**
 - **Name and description** — what the agent does
@@ -109,13 +109,13 @@ If the agent card shows **no security requirements**, you can proceed directly t
 
 For a simple one-shot interaction:
 
-```bash
+```powershell
 a2a-ask send <agent-url> -m "Your question or request here"
 ```
 
 **For agents that support streaming** (check capabilities in the agent card):
 
-```bash
+```powershell
 a2a-ask stream <agent-url> -m "Your question or request here"
 ```
 
@@ -140,7 +140,7 @@ When the agent returns `input-required`, it is asking a follow-up question. The 
 
 **Send a follow-up using the task ID from the previous response:**
 
-```bash
+```powershell
 a2a-ask send <agent-url> -m "Your answer to the agent's question" --task-id <task-id-from-response>
 ```
 
@@ -148,7 +148,7 @@ You can continue this conversation loop as many times as needed. Always pass the
 
 **To group related but separate tasks into a logical session, use `--context-id`:**
 
-```bash
+```powershell
 a2a-ask send <agent-url> -m "First request" --context-id my-session-123
 a2a-ask send <agent-url> -m "Related request" --context-id my-session-123
 ```
@@ -157,17 +157,51 @@ a2a-ask send <agent-url> -m "Related request" --context-id my-session-123
 
 Use catalog commands when you need to inspect an AI catalog before choosing an A2A agent.
 
-### `a2a-ask catalog list <target>`
+### `a2a-ask catalog add <alias> <url>`
 
-List A2A agents available in a catalog.
+Register a catalog alias for easy reuse.
 
-```bash
-a2a-ask catalog list <target> [options]
+```powershell
+a2a-ask catalog add <alias> <url> [--no-validate]
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `<target>` | Catalog URL, host/origin shorthand, or `@@catalog` reference |
+| `<alias>` | Friendly name to register for the catalog |
+| `<url>` | Catalog URL |
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--no-validate` | Skip validating the catalog during registration | `false` |
+| `-v, --verbose` | Verbose output | `false` |
+
+### `a2a-ask catalog remove <alias>`
+
+Remove a registered catalog alias.
+
+```powershell
+a2a-ask catalog remove <alias>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<alias>` | Registered catalog alias to remove |
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-v, --verbose` | Verbose output | `false` |
+
+### `a2a-ask catalog list [target]`
+
+When no target is provided, show all registered catalog aliases. When a target is provided, list A2A agents available in that catalog.
+
+```powershell
+a2a-ask catalog list [target] [options]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `[target]` | Optional catalog alias or URL to browse |
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -180,13 +214,13 @@ a2a-ask catalog list <target> [options]
 
 Show one resolved A2A agent from a catalog.
 
-```bash
+```powershell
 a2a-ask catalog show <target>
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `<target>` | Catalog URL, host/origin shorthand, `@@catalog`, or `@agent@catalog` target |
+| `<target>` | Catalog alias, direct URL, bare name, or `agent@catalog` target |
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -194,22 +228,152 @@ a2a-ask catalog show <target>
 | `--pretty` | Pretty-print JSON | `false` |
 | `-v, --verbose` | Verbose output | `false` |
 
-If the catalog contains multiple A2A agents, use `@agent@catalog` to choose one explicitly. Bare `@agent` targets are not enough in Phase 1; include the catalog host or URL.
+A bare name first checks registered catalog aliases, then searches all registered catalogs in parallel for a matching agent. Use `agent@catalog` when you want to resolve a specific agent from a specific registered catalog alias.
+
+### `a2a-ask catalog install <target>`
+
+Install a catalog agent as a Copilot CLI custom agent.
+
+```powershell
+a2a-ask catalog install <target> [options]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<target>` | `agent@catalog` reference or direct catalog URL |
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--name <name>` | Override the generated Copilot agent name | card name, kebab-cased |
+| `--overwrite` | Replace an existing bridge file | `false` |
+| `--dry-run` | Print the generated bridge without writing it | `false` |
+| `--skip-auth-check` | Skip the authentication pre-flight warning | `false` |
+| `--output <json\|text>` | Output format for `--dry-run` results | `json` |
+| `--pretty` | Pretty-print JSON when combined with `--dry-run` | `false` |
+| `-v, --verbose` | Verbose output | `false` |
+
+Installs always target `~/.copilot/agents/<name>.md`. The generated bridge includes `remote-agent` frontmatter with the source catalog URL, entry id, card URL, card ETag, card hash, and install timestamp.
+
+If the agent card declares security schemes, the command warns before writing unless you pass `--skip-auth-check`. Existing bridge files are never replaced unless `--overwrite` is present, and reserved names such as `explore`, `task`, `code-review`, `general-purpose`, `research`, and `Squad` are rejected.
+
+**Examples:**
+
+```powershell
+# Install from a registered catalog alias
+a2a-ask catalog install weather@myorg
+
+# Install from a direct catalog URL and override the bridge name
+a2a-ask catalog install "https://example.com/.well-known/ai-catalog.json" --name weather-bridge
+
+# Preview the generated bridge as text without writing it
+a2a-ask catalog install weather@myorg --dry-run --output text
+
+# Preview the generated bridge as JSON
+a2a-ask catalog install weather@myorg --dry-run --output json --pretty
+```
+
+### `a2a-ask catalog uninstall <name>`
+
+Remove an installed A2A Copilot bridge.
+
+```powershell
+a2a-ask catalog uninstall <name>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `<name>` | Installed Copilot bridge agent name |
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-v, --verbose` | Verbose output | `false` |
+
+The command deletes `~/.copilot/agents/<name>.md` only after validating that the file contains `remote-agent` frontmatter. It refuses to delete ordinary Copilot agent files that were not generated as A2A bridges.
+
+**Examples:**
+
+```powershell
+# Remove an installed bridge
+a2a-ask catalog uninstall weather
+
+# Show detailed errors if the target is missing or not an A2A bridge
+a2a-ask catalog uninstall weather -v
+```
+
+### `a2a-ask catalog installed`
+
+List installed A2A Copilot bridge agents.
+
+```powershell
+a2a-ask catalog installed [options]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--output <json\|text>` | Output format | `json` |
+| `--pretty` | Pretty-print JSON | `false` |
+| `-v, --verbose` | Verbose output | `false` |
+
+This command scans `~/.copilot/agents/` for Markdown files with `remote-agent` frontmatter, sorts them alphabetically, and returns the installed bridge name, catalog URL, entry id, card URL, install timestamp, and file path.
+
+**Examples:**
+
+```powershell
+# Machine-readable output
+a2a-ask catalog installed --output json --pretty
+
+# Human-readable summary
+a2a-ask catalog installed --output text
+```
+
+### `a2a-ask catalog sync [name]`
+
+Refresh installed A2A Copilot bridges from their agent cards.
+
+```powershell
+a2a-ask catalog sync [name] [options]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `[name]` | Optional installed bridge name to sync; omit to sync all installed bridges |
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--output <json\|text>` | Output format | `json` |
+| `--pretty` | Pretty-print JSON | `false` |
+| `-v, --verbose` | Verbose output and card-fetch telemetry to stderr | `false` |
+
+`catalog sync` re-fetches agent cards for installed bridges, sends `If-None-Match` when a stored ETag is available, and reports each bridge as updated, unchanged, or failed. When a card changes, the command updates only the generated region between `<!-- a2a:begin-generated -->` and `<!-- a2a:end-generated -->`, preserving any user customizations outside that section while refreshing the `remote-agent` metadata block.
+
+**Examples:**
+
+```powershell
+# Sync every installed bridge with JSON output
+a2a-ask catalog sync --output json --pretty
+
+# Sync a single bridge with text output
+a2a-ask catalog sync weather --output text
+
+# Emit verbose telemetry for card fetch operations
+a2a-ask catalog sync weather -v --output text
+```
 
 ### Catalog target syntax
 
 | Target form | Resolves as |
 |-------------|-------------|
-| `@agentName` | Bare catalog target. Parsed, but Phase 1 still requires an explicit catalog host or URL. |
-| `@agentName@catalogAlias` | Resolve one agent from a specific catalog host, origin, or full catalog URL. |
-| `@@catalogAlias` | Browse a catalog by host, origin, or full catalog URL. |
+| `https://example.com/catalog` | Direct URL to a catalog or agent |
+| `agent@catalog` | Resolve a specific agent from a registered catalog alias |
+| `mycatalog` | Bare name: first checks registered aliases, then searches all registered catalogs |
+| `my+agent@my+catalog` | Spaces encoded as `+` in agent and catalog names |
 
 ### Direct send behavior
 
-- `discover` fetches an agent card.
-- `send` uses a plain URL as the request endpoint directly.
-- `stream` and `task` commands also use the URL you pass directly; they do not fetch the card first.
-- Catalog-resolved targets still use the catalog's agent card metadata when needed.
+- `discover`, `send`, and `stream` all use the same target resolution rules: registered catalog aliases, `agent@catalog`, bare names, or direct URLs.
+- Targets containing `://` are treated as direct URLs.
+- Bare names containing `.`, `:`, or `/` are also treated as URLs (for example, `localhost:5000`).
+- Catalog-resolved targets use the resolved agent card metadata when needed.
 - For older direct endpoints, add `--a2a-version 0.3`.
 
 ## CLI Commands Reference
@@ -218,13 +382,13 @@ If the catalog contains multiple A2A agents, use `@agent@catalog` to choose one 
 
 Fetch and display an A2A agent card.
 
-```bash
+```powershell
 a2a-ask discover <target> [options]
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `<target>` | Agent URL or `@agent@catalog` reference |
+| `<target>` | Agent URL, catalog alias, bare name, or `agent@catalog` reference |
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -240,7 +404,7 @@ a2a-ask discover <target> [options]
 
 Send a message to an A2A agent and wait for the response.
 
-```bash
+```powershell
 a2a-ask send <url> -m "message" [options]
 ```
 
@@ -280,7 +444,7 @@ Plain URLs are sent directly with no agent card fetch. Use `discover` if you nee
 
 Send a message with streaming response, showing real-time progress.
 
-```bash
+```powershell
 a2a-ask stream <url> -m "message" [options]
 ```
 
@@ -294,7 +458,7 @@ Same options as `send` (including `--a2a-version 0.3` for older direct endpoints
 
 Get the current state of a task (for polling).
 
-```bash
+```powershell
 a2a-ask task get <url> --task-id <id> [options]
 ```
 
@@ -309,7 +473,7 @@ a2a-ask task get <url> --task-id <id> [options]
 
 List tasks with optional filtering.
 
-```bash
+```powershell
 a2a-ask task list <url> [options]
 ```
 
@@ -326,7 +490,7 @@ a2a-ask task list <url> [options]
 
 Cancel a running task.
 
-```bash
+```powershell
 a2a-ask task cancel <url> --task-id <id> [options]
 ```
 
@@ -341,7 +505,7 @@ a2a-ask task cancel <url> --task-id <id> [options]
 
 Interactively authenticate with an A2A agent using OAuth2 device code flow or client credentials.
 
-```bash
+```powershell
 a2a-ask auth login <url> [--client-id <id> --client-secret <secret>] [--tenant <id>]
 ```
 
@@ -360,7 +524,7 @@ The obtained token is stored for reuse. Stored tokens are automatically used by 
 
 Remove the stored authentication token for an agent.
 
-```bash
+```powershell
 a2a-ask auth logout <url> [--tenant <id>]
 ```
 
@@ -368,7 +532,7 @@ a2a-ask auth logout <url> [--tenant <id>]
 
 Show authentication status for an agent — token validity, expiry, and whether a refresh token is available.
 
-```bash
+```powershell
 a2a-ask auth status <url> [--tenant <id>]
 ```
 
@@ -376,7 +540,7 @@ a2a-ask auth status <url> [--tenant <id>]
 
 Register an OAuth2 client for automatic use when encountering agents authenticated by a matching identity provider.
 
-```bash
+```powershell
 a2a-ask auth register-client --client-id <id> --issuer <url> [--resource <url>]
 ```
 
@@ -394,7 +558,7 @@ Registrations are stored persistently in `~/.a2a-ask/clients.json` (encrypted wi
 
 List all registered OAuth2 clients.
 
-```bash
+```powershell
 a2a-ask auth list-clients
 ```
 
@@ -404,7 +568,7 @@ Shows a table of all registered clients with their issuer, client ID, resource (
 
 Remove a registered OAuth2 client.
 
-```bash
+```powershell
 a2a-ask auth remove-client --issuer <url> [--resource <url>]
 ```
 
@@ -430,7 +594,7 @@ Security Schemes:
   "api_key": API Key (header: X-API-Key)
 ```
 → Ask the user for the API key, then:
-```bash
+```powershell
 a2a-ask send <url> -m "message" --api-key "user-provided-key" --api-key-header "X-API-Key"
 ```
 
@@ -440,7 +604,7 @@ Security Schemes:
   "bearer_auth": HTTP Bearer
 ```
 → Ask the user for their bearer token, then:
-```bash
+```powershell
 a2a-ask send <url> -m "message" --auth-token "user-provided-token"
 ```
 
@@ -450,7 +614,7 @@ Security Schemes:
   "oauth2": OAuth2 (device code flow available)
 ```
 → For interactive users, run the device code login:
-```bash
+```powershell
 a2a-ask auth login <url>
 ```
 This will display a device code and verification URL. Ask the user to visit the URL and enter the code. Once authenticated, the token is stored and subsequent commands will use it automatically.
@@ -458,7 +622,7 @@ This will display a device code and verification URL. Ask the user to visit the 
 If the user previously registered a client for the matching issuer with `a2a-ask auth register-client`, the CLI uses that client automatically instead of requiring `--client-id` to be passed manually.
 
 → For service-to-service auth (client credentials), ask the user for their client ID and secret:
-```bash
+```powershell
 a2a-ask auth login <url> --client-id "my-app" --client-secret "secret"
 ```
 
@@ -468,13 +632,13 @@ Security Schemes:
   "basic_auth": HTTP Basic
 ```
 → Ask the user for their username and password:
-```bash
+```powershell
 a2a-ask send <url> -m "message" --auth-user "username" --auth-password "password"
 ```
 
 **Custom headers:**
 For non-standard auth mechanisms, use:
-```bash
+```powershell
 a2a-ask send <url> -m "message" --auth-header "X-Custom-Auth=secret-value"
 ```
 
@@ -501,7 +665,7 @@ If the agent card's capabilities indicate streaming is supported, prefer `a2a-as
 - Partial results as they become available
 - Better user experience for long-running tasks
 
-```bash
+```powershell
 a2a-ask stream <url> -m "Analyze this data" --output text
 ```
 
@@ -517,14 +681,14 @@ In text mode, streaming renders status updates like:
 If the agent doesn't support streaming, or you used `send` with `--return-immediately`:
 
 1. Send the initial message:
-```bash
+```powershell
 a2a-ask send <url> -m "Long running task" --return-immediately
 ```
 
 2. Note the `task-id` from the response.
 
 3. Poll for status (start at 2-second intervals, back off to 5 seconds):
-```bash
+```powershell
 a2a-ask task get <url> --task-id <id>
 ```
 
@@ -534,7 +698,7 @@ a2a-ask task get <url> --task-id <id>
 
 If you already have a task ID and want to watch for updates via streaming:
 
-```bash
+```powershell
 a2a-ask stream <url> --task-id <task-id> --subscribe
 ```
 
@@ -544,7 +708,7 @@ a2a-ask stream <url> --task-id <task-id> --subscribe
 
 Include a file with your message:
 
-```bash
+```powershell
 a2a-ask send <url> -m "Summarize this document" --file ./report.pdf
 ```
 
@@ -552,7 +716,7 @@ a2a-ask send <url> -m "Summarize this document" --file ./report.pdf
 
 Send JSON data as a message part:
 
-```bash
+```powershell
 a2a-ask send <url> -d '{"key": "value", "items": [1, 2, 3]}'
 ```
 
@@ -560,7 +724,7 @@ a2a-ask send <url> -d '{"key": "value", "items": [1, 2, 3]}'
 
 When the agent returns file artifacts (images, documents, etc.), save them to disk:
 
-```bash
+```powershell
 a2a-ask send <url> -m "Generate a chart" --save-artifacts ./output/
 ```
 
@@ -568,14 +732,14 @@ a2a-ask send <url> -m "Generate a chart" --save-artifacts ./output/
 
 ### Simple Question → Answer
 
-```bash
+```powershell
 a2a-ask discover https://agent.example.com/weather --output text
 a2a-ask send https://agent.example.com/weather -m "What's the weather in Seattle?"
 ```
 
 ### Streaming Conversation with Follow-ups
 
-```bash
+```powershell
 # Initial request
 a2a-ask stream https://agent.example.com/assistant -m "Help me plan a trip to Japan"
 
@@ -588,7 +752,7 @@ a2a-ask stream https://agent.example.com/assistant -m "2 weeks in April, interes
 
 When the user provides an agent URL you haven't seen before:
 
-```bash
+```powershell
 # Step 1: Always discover first
 a2a-ask discover <url> --output text --pretty
 
@@ -598,9 +762,31 @@ a2a-ask discover <url> --output text --pretty
 a2a-ask send <url> -m "request matching the agent's described skills"
 ```
 
+### Working with Catalog Aliases
+
+```powershell
+# Register a catalog alias
+a2a-ask catalog add myorg https://catalog.example.com/agents
+
+# List all registered aliases
+a2a-ask catalog list
+
+# Browse agents in the registered catalog
+a2a-ask catalog list myorg --output text
+
+# Send to a specific agent using alias
+a2a-ask send myagent@myorg -m "Hello"
+
+# Send using bare name (searches all registered catalogs)
+a2a-ask send myagent -m "Hello"
+
+# Remove an alias
+a2a-ask catalog remove myorg
+```
+
 ### Working with a Secured Agent
 
-```bash
+```powershell
 # Discover and see security requirements
 a2a-ask discover https://secure-agent.example.com --output text
 
@@ -614,7 +800,7 @@ a2a-ask send https://secure-agent.example.com -m "Secured request"
 
 ### Registering OAuth2 Clients for Repeated Use
 
-```bash
+```powershell
 # One-time: register a client for Azure AD
 a2a-ask auth register-client \
   --client-id "my-app-client-id" \
@@ -650,7 +836,7 @@ a2a-ask auth remove-client --issuer "https://login.microsoftonline.com/common/v2
 
 For debugging, add `-v` to any command to see detailed request/response information:
 
-```bash
+```powershell
 a2a-ask send <url> -m "test" -v
 ```
 
@@ -715,14 +901,14 @@ For plain direct URLs, the CLI defaults to v1.0. When you know an older agent sp
 
 ### GitHub Copilot CLI (personal)
 
-```bash
+```powershell
 mkdir -p ~/.copilot/skills/a2a-ask-cli
 cp skill/SKILL.md ~/.copilot/skills/a2a-ask-cli/SKILL.md
 ```
 
 ### GitHub Copilot CLI (project)
 
-```bash
+```powershell
 mkdir -p .github/skills/a2a-ask-cli
 cp skill/SKILL.md .github/skills/a2a-ask-cli/SKILL.md
 git add .github/skills/
@@ -731,21 +917,21 @@ git commit -m "Add A2A-Ask CLI agent skill"
 
 ### Claude Code (personal)
 
-```bash
+```powershell
 mkdir -p ~/.claude/skills/a2a-ask-cli
 cp skill/SKILL.md ~/.claude/skills/a2a-ask-cli/SKILL.md
 ```
 
 ### Claude Code (project)
 
-```bash
+```powershell
 mkdir -p .claude/skills/a2a-ask-cli
 cp skill/SKILL.md .claude/skills/a2a-ask-cli/SKILL.md
 ```
 
 ### VS Code / Cursor (project)
 
-```bash
+```powershell
 mkdir -p .github/skills/a2a-ask-cli
 cp skill/SKILL.md .github/skills/a2a-ask-cli/SKILL.md
 ```
