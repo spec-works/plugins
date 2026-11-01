@@ -28,15 +28,6 @@
       ]
     },
     {
-      "name": "xregistry-mcp",
-      "source": "plugins/xregistry-mcp",
-      "description": "xRegistry specification discovery and navigation MCP server.",
-      "version": "1.0.0",
-      "skills": [
-        "./skills/xregistry-mcp"
-      ]
-    },
-    {
       "name": "officetalk",
       "source": "plugins/officetalk",
       "description": "Apply deterministic operations to Office documents (.docx, .xlsx, .pptx) via OfficeTalk CLI.",

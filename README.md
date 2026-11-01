@@ -16,7 +16,6 @@ Extend the power of your AI coding assistant with skills, MCP servers, and other
 | [a2a-ask](plugins/a2a-ask/) | Skill | Interact with remote A2A (Agent-to-Agent) protocol agents |
 | [markmyword](plugins/markmyword/) | Skill | Bidirectional Markdown ↔ Word (.docx) conversion |
 | [markmydeck](plugins/markmydeck/) | Skill | Markdown → PowerPoint (.pptx) conversion |
-| [xregistry-mcp](plugins/xregistry-mcp/) | MCP Server | xRegistry specification discovery and navigation |
 
 ## How It Works
 
@@ -36,7 +35,6 @@ Plugin content is managed through the source part repos:
 - [MarkMyWord](https://github.com/spec-works/MarkMyWord) — Word document conversion skill
 - [MarkMyDeck](https://github.com/spec-works/MarkMyDeck) — PowerPoint conversion skill
 - [A2A-Ask](https://github.com/spec-works/A2A-Ask) — A2A agent interaction skill
-- [xRegistry-MCP-Server](https://github.com/spec-works/xRegistry-MCP-Server) — xRegistry MCP server
 
 To contribute, submit PRs to the appropriate part repo. Changes will be published here automatically on release.
 
