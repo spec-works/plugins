@@ -37,6 +37,15 @@
       ]
     },
     {
+      "name": "repoyak",
+      "source": "plugins/repoyak",
+      "description": "Turn repositories into addressable A2A agents with RepoYak; manage hosts, agents, and AI Catalog discovery.",
+      "version": "0.2.0-preview.4",
+      "skills": [
+        "./skills/repoyak-cli"
+      ]
+    },
+    {
       "name": "a2a-ask",
       "source": "plugins/a2a-ask",
       "description": "Interact with remote A2A (Agent-to-Agent) protocol agents via CLI.",
