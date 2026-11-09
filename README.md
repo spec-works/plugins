@@ -14,6 +14,7 @@ Extend the power of your AI coding assistant with skills, MCP servers, and other
 | Plugin | Type | Description |
 |--------|------|-------------|
 | [a2a-ask](plugins/a2a-ask/) | Skill | Interact with remote A2A (Agent-to-Agent) protocol agents |
+| [repoyak](plugins/repoyak/) | Skill | Create and manage repository-backed A2A agents with RepoYak |
 | [markmyword](plugins/markmyword/) | Skill | Bidirectional Markdown ↔ Word (.docx) conversion |
 | [markmydeck](plugins/markmydeck/) | Skill | Markdown → PowerPoint (.pptx) conversion |
 
@@ -35,8 +36,9 @@ Plugin content is managed through the source part repos:
 - [MarkMyWord](https://github.com/spec-works/MarkMyWord) — Word document conversion skill
 - [MarkMyDeck](https://github.com/spec-works/MarkMyDeck) — PowerPoint conversion skill
 - [A2A-Ask](https://github.com/spec-works/A2A-Ask) — A2A agent interaction skill
+- [RepoYak](https://github.com/spec-works/RepoYak) — Repository-backed agents, host management, and AI Catalog discovery
 
-To contribute, submit PRs to the appropriate part repo. Changes will be published here automatically on release.
+To contribute, submit PRs to the appropriate source repo. Changes are published here as part of that project's release process.
 
 ## 📄 License
 
